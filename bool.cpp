@@ -1,0 +1,168 @@
+#include <iostream>
+
+using namespace std;
+
+//Comination lock class. Needs to land on the right numbers in the right order going in the correct direction to open.
+class ComboLock {
+	int lockSize; //so we could easily make bigger lock	
+	int dialPos; //current position of dial	
+	int currentInd; //current entry index
+
+	int codesDirs[10][2]; //code will be stored here, dirs left = 1, right = -1
+	int entrysDirs [10][2]; //array for entered values and dirs
+	
+	void addEntry(int, int);
+
+	public:
+       	ComboLock (int, int, int); //delcares the class initialization
+	int getDialPosition(){return dialPos;}; //returns the current position of the dial
+	void reset(); //resets the lock
+	void turnLeft(int); //turns lock left by desired number of ticks
+	void turnRight(int); //turns lock right by desired number of ticks
+	bool open(); //checks if entries are correct so lock can be openned, if so reset and return true
+	
+};
+
+//initialize the class given the 3 lock codes in order, rest has been coded so this can be expanded to larger lock
+ComboLock::ComboLock (int first, int second, int third){
+	lockSize = 3;
+	codesDirs[0][0] = first;
+	codesDirs[1][0] = second;
+	codesDirs[2][0] = third;
+	
+	//makes directions -1, +1, -1, +1, -1 ... in case we wanted bigger lock	
+	//private function to add entry and move others back one
+	int positive = -1;	
+	for (int i = 0; i < lockSize; i++)
+	{
+		codesDirs[i][1] = positive;
+		positive *= -1;
+	}
+	
+	/* was test to ensure they captured correctly.
+	for (int i = 0; i < lockSize; i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			cout << codesDirs[i][j] << ", ";
+		}
+		cout << endl;
+	}	
+	*/
+
+	reset(); //rather than including these in class declaration
+}
+
+//resets the lock and entry values
+void ComboLock::reset(){
+	dialPos = 0;
+	currentInd = 0;
+	for (int i = 0; i < lockSize; i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			entrysDirs[i][j] = 0;
+		}
+
+	}
+}
+
+//add entry to array given the end number and direction
+void ComboLock::addEntry(int endNum, int dir){
+	
+	//if over the max number of indecies:
+	//overwrite first entry
+	//move first couple back one
+	//and add new one to the end
+	if (currentInd > lockSize - 1)	
+	{
+		for (int i = 0; i < lockSize - 1; i++)
+		{
+			for (int j = 0; j < 1; j++)
+			{
+				entrysDirs[i][j] = entrysDirs[i+1][j+1];
+
+			}
+		}
+		entrysDirs[lockSize][0] = endNum;
+		entrysDirs[lockSize][1] = dir;
+	}
+
+	//otherwise: add new entry first empty
+	else
+	{
+		entrysDirs[currentInd][0] = endNum;
+		entrysDirs[currentInd][1] = dir;
+	}
+	//move "first empty" over one for next entry
+	currentInd++;
+}
+
+
+void ComboLock::turnLeft(int ticks){
+	while (ticks > 0)
+	{
+		dialPos++;
+		ticks--;
+		if (dialPos == 40)
+		{
+			dialPos = 0;
+		}
+	}
+	addEntry(dialPos, 1); //adds this to entry list. positive one is left
+}
+
+void ComboLock::turnRight(int ticks){
+	while (ticks > 0)
+	{
+		dialPos--;
+		ticks--;
+		if (dialPos == -1)
+		{
+			dialPos = 39;
+		}
+	}
+	addEntry(dialPos, -1); //adds this to entry list. negative one is right
+}
+
+bool ComboLock::open()
+{
+	bool status[lockSize] = {false};
+	bool allStat = true;	
+	for (int i = 0; i < lockSize; i++)
+	{
+		if ((entrysDirs[i][0] == codesDirs[i][0]) && (entrysDirs[i][1] == codesDirs[i][1]))
+		{
+			status[i] = true;
+		}
+			
+	}
+	for (int i = 0; i < lockSize; i++)
+	{
+		if (allStat && status[i])
+		{
+			allStat = true;
+		}
+		else
+		{
+			allStat = false;
+		}
+	}
+	if (allStat) //if all true then reset lock.
+	{
+		reset();
+	}
+	return allStat; //returns true if all values true, otherwise false
+}
+
+
+int main(){
+	//Test #1: correctly open the lock. open() should return true
+	ComboLock c1 (10, 20, 30);
+	c1.turnLeft(30); //turn right to position 10
+	c1.turnRight(10); //turn left to position 20
+	c1.turnLeft(30); //turn right to position 30
+	cout << "Opening lock c1: " << c1.open() << "\n"; //should output "true"
+
+	return 0;
+}
