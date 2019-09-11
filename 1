@@ -70,24 +70,34 @@ void ComboLock::reset(){
 //add entry to array given the end number and direction
 void ComboLock::addEntry(int endNum, int dir){
 	
-	if (currentInd < lockSize)
+	//if over the max number of indecies:
+	//overwrite first entry
+	//move first couple back one
+	//and add new one to the end
+	if (currentInd > lockSize - 1)	
+	{
+		for (int i = 0; i < lockSize - 1; i++)
+		{
+			for (int j = 0; j < 1; j++)
+			{
+				entrysDirs[i][j] = entrysDirs[i+1][j+1];
+
+			}
+		}
+		entrysDirs[lockSize][0] = endNum;
+		entrysDirs[lockSize][1] = dir;
+	}
+
+	//otherwise: add new entry first empty
+	else
 	{
 		entrysDirs[currentInd][0] = endNum;
 		entrysDirs[currentInd][1] = dir;
 	}
-
-	for (int i = 0; i < lockSize; i++)
-	{
-		for (int j = 0; j < 2; j++)
-		{
-			cout << entrysDirs[i][j] << ", ";
-		}
-		cout << endl;
-	}
-	cout << endl;	
-	
 	//move "first empty" over one for next entry
+	cout << currentInd << ": " << entrysDirs[currentInd][0] << ", " << entrysDirs[currentInd][1] << endl;
 	currentInd++;
+
 }
 
 
@@ -164,11 +174,5 @@ int main(){
 	c1.turnRight(30);
 	cout << "Opening lock c1: " << c1.open() << "\n"; //should output "true"
 	
-	c1.reset();
-	c1.turnRight(30);
-	c1.turnLeft(10);
-	c1.turnRight(30);
-	cout << "Opening lock c1: " << c1.open() << "\n"; //should output "true"
-
 	return 0;
 }
